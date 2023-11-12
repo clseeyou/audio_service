@@ -244,7 +244,7 @@ public class AudioServicePlugin implements FlutterPlugin, ActivityAware {
     @Override
     public void onAttachedToEngine(FlutterPluginBinding binding) {
         flutterPluginBinding = binding;
-        clientInterface = new ClientInterface(flutterPluginBinding.getBinaryMessenger());
+        clientInterface = new ClientInterface(this, flutterPluginBinding.getBinaryMessenger());
         clientInterface.setContext(flutterPluginBinding.getApplicationContext());
         clientInterfaces.add(clientInterface);
         if (applicationContext == null) {
@@ -257,9 +257,9 @@ public class AudioServicePlugin implements FlutterPlugin, ActivityAware {
             audioHandlerInterface = new AudioHandlerInterface(flutterPluginBinding.getBinaryMessenger());
             AudioService.init(audioHandlerInterface);
         }
-        if (mediaBrowser == null) {
-            connect();
-        }
+        // if (mediaBrowser == null) {
+        //     connect();
+        // }
     }
 
     @Override
@@ -297,9 +297,9 @@ public class AudioServicePlugin implements FlutterPlugin, ActivityAware {
         if (mediaController != null) {
             MediaControllerCompat.setMediaController(mainClientInterface.activity, mediaController);
         }
-        if (mediaBrowser == null) {
-            connect();
-        }
+        // if (mediaBrowser == null) {
+        //     connect();
+        // }
 
         Activity activity = mainClientInterface.activity;
         if (clientInterface.wasLaunchedFromRecents()) {
@@ -386,6 +386,7 @@ public class AudioServicePlugin implements FlutterPlugin, ActivityAware {
     }
 
     private static class ClientInterface implements MethodCallHandler {
+        private final AudioServicePlugin plugin;
         private Context context;
         private Activity activity;
         public final BinaryMessenger messenger;
@@ -405,7 +406,8 @@ public class AudioServicePlugin implements FlutterPlugin, ActivityAware {
 //            }
 //        };
 
-        public ClientInterface(BinaryMessenger messenger) {
+        public ClientInterface(AudioServicePlugin plugin, BinaryMessenger messenger) {
+            this.plugin = plugin;
             this.messenger = messenger;
             channel = new MethodChannel(messenger, CHANNEL_CLIENT);
             channel.setMethodCallHandler(this);
@@ -443,6 +445,7 @@ public class AudioServicePlugin implements FlutterPlugin, ActivityAware {
                     if (serviceConnectionFailed) {
                         throw new IllegalStateException("Unable to bind to AudioService. Please ensure you have declared a <service> element as described in the README.");
                     }
+                    plugin.connect();
                     flutterReady = true;
                     Map<?, ?> args = (Map<?, ?>)call.arguments;
                     Map<?, ?> configMap = (Map<?, ?>)args.get("config");
